@@ -12,8 +12,11 @@ provider:
   stage: ${opt:stage, 'dev'}
   region: ${opt:region, 'us-east-1'}
 
-functions:
+  tracing:
+    lambda: true
+    apiGateway: true
 
+functions:
   Auth:
     handler: src/lambda/auth/auth0Authorizer.handler
 
