@@ -25,6 +25,10 @@ export async function create(userId: string, request: CreateTodoRequest) {
     return await todoRepository.save(item);
 }
 
-export async function update(todoId: string, request: UpdateTodoRequest) {
-    await todoRepository.update(todoId, request);
+export async function remove(todoId: string, userId: string) {
+    await todoRepository.remove(todoId, userId);
+}
+
+export async function update(todoId: string, userId: string, request: UpdateTodoRequest) {
+    await todoRepository.update(todoId, userId, request);
 }

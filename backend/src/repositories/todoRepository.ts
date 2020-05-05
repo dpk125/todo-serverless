@@ -34,14 +34,27 @@ export class TodoRepository {
         return item;
     }
 
-    async update(todoId: string, item: TodoUpdate) {
+    async remove(todoId: string, userId: string) {
+        await this.documentClient.delete({
+            TableName: this.todosTable,
+            ConditionExpression: 'userId = :userId',
+            ExpressionAttributeValues: {
+                ':userId': userId
+            },
+            Key: { todoId }
+        }).promise();
+    }
+
+    async update(todoId: string, userId: string, item: TodoUpdate) {
         await this.documentClient.update({
             TableName: this.todosTable,
             UpdateExpression: 'SET name = :name, dueDate = :dueDate, done = :done',
+            ConditionExpression: 'userId = :userId',
             ExpressionAttributeValues: {
                 ':name': item.name,
                 ':dueDate': item.dueDate,
-                ':done': item.done
+                ':done': item.done,
+                ':userId': userId
             },
             Key: { todoId }
         }).promise();
