@@ -1,5 +1,5 @@
 service:
-  name: serverless-todo-app
+  name: todo-serverless
 
 plugins:
   - serverless-webpack
@@ -15,6 +15,20 @@ provider:
   tracing:
     lambda: true
     apiGateway: true
+
+  environment:
+    AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    ATTACHMENTS_S3_BUCKET: todo-serverless-attachments-6ad7-${self:provider.stage}
+    SIGNED_URL_EXPIRATION: 300
+    TODOS_TABLE: ${self:custom.todosTable}
+    TODOS_INDEX: ${self:custom.todosIndex}
+
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - xray:PutTelemetryRecords
+        - xray:PutTraceSegments
+      Resource: '*'
 
 functions:
   Auth:
@@ -55,13 +69,20 @@ functions:
           method: delete
           path: todos/{todoId}
 
-  # TODO: Configure this function
   GenerateUploadUrl:
     handler: src/lambda/http/generateUploadUrl.handler
     events:
       - http:
           method: post
           path: todos/{todoId}/attachment
+          authorizer: Auth
+          cors: true
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - s3:GetObject
+          - s3:PutObject
+        Resource: arn:aws:s3:::${self:provider.environment.ATTACHMENTS_S3_BUCKET}/*
 
 resources:
   Resources:
