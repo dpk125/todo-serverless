@@ -1,22 +1,16 @@
-import { CustomAuthorizerEvent, CustomAuthorizerResult } from 'aws-lambda'
 import 'source-map-support/register'
-
+import { CustomAuthorizerEvent, CustomAuthorizerResult } from 'aws-lambda'
 import { verify, decode } from 'jsonwebtoken'
 import { createLogger } from '../../utils/logger'
-import Axios from 'axios'
 import { Jwt } from '../../auth/Jwt'
 import { JwtPayload } from '../../auth/JwtPayload'
+import jwksClient, { SigningKey } from 'jwks-rsa';
 
 const logger = createLogger('auth')
+const jwksUri = process.env.AUTH0_JWKS_URL;
+const client = jwksClient({ jwksUri });
 
-// TODO: Provide a URL that can be used to download a certificate that can be used
-// to verify JWT token signature.
-// To get this URL you need to go to an Auth0 page -> Show Advanced Settings -> Endpoints -> JSON Web Key Set
-const jwksUrl = '...'
-
-export const handler = async (
-  event: CustomAuthorizerEvent
-): Promise<CustomAuthorizerResult> => {
+export const handler = async (event: CustomAuthorizerEvent): Promise<CustomAuthorizerResult> => {
   logger.info('Authorizing a user', event.authorizationToken)
   try {
     const jwtToken = await verifyToken(event.authorizationToken)
@@ -57,11 +51,9 @@ export const handler = async (
 async function verifyToken(authHeader: string): Promise<JwtPayload> {
   const token = getToken(authHeader)
   const jwt: Jwt = decode(token, { complete: true }) as Jwt
+  const certificate = await getCertificate(jwt.header.kid);
 
-  // TODO: Implement token verification
-  // You should implement it similarly to how it was implemented for the exercise for the lesson 5
-  // You can read more about how to do this here: https://auth0.com/blog/navigating-rs256-and-jwks/
-  return undefined
+  return verify(token, certificate.getPublicKey(), { algorithms: ['RS256'] }) as JwtPayload;
 }
 
 function getToken(authHeader: string): string {
@@ -70,8 +62,19 @@ function getToken(authHeader: string): string {
   if (!authHeader.toLowerCase().startsWith('bearer '))
     throw new Error('Invalid authentication header')
 
-  const split = authHeader.split(' ')
-  const token = split[1]
+  const [, token] = authHeader.split(' ')
 
   return token
+}
+
+function getCertificate(kid: string): Promise<SigningKey> {
+  return new Promise((resolve, reject) => {
+    client.getSigningKey(kid, (error, key) => {
+      if (error) {
+        return reject(error);
+      }
+
+      resolve(key);
+    });
+  })
 }

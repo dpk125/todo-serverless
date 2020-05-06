@@ -19,6 +19,8 @@ provider:
 functions:
   Auth:
     handler: src/lambda/auth/auth0Authorizer.handler
+    environment:
+      AUTH0_JWKS_URL: https://dev-lhbo4v8l.eu.auth0.com/.well-known/jwks.json
 
   # TODO: Configure this function
   GetTodos:
