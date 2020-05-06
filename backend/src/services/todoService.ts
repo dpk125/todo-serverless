@@ -3,7 +3,8 @@ import { TodoItem } from '../models/TodoItem';
 import { UpdateTodoRequest } from '../requests/UpdateTodoRequest';
 import { CreateTodoRequest } from '../requests/CreateTodoRequest';
 import { TodoRepository } from '../repositories/todoRepository';
-import { getUploadUrl } from '../storage/attachmentsStorage';
+import * as attachmentsStorage from '../storage/attachmentsStorage';
+import { TodoUpdateAttachment } from '../models/TodoUpdateAttachment';
 
 const todoRepository = new TodoRepository();
 
@@ -34,6 +35,15 @@ export async function update(todoId: string, userId: string, request: UpdateTodo
     await todoRepository.update(todoId, userId, request);
 }
 
-export function getAttachmentUploadUrl(todoId: string) {
-  return getUploadUrl(todoId);
+export function getAttachmentUploadUrl(todoId: string, userId: string) {
+  return attachmentsStorage.getUploadUrl(todoId, userId);
+}
+
+export function getAttachmentUrl(todoId: string) {
+  return attachmentsStorage.getAttachmentUrl(todoId);
+}
+
+export async function updateAttachment(todoId: string, request: TodoUpdateAttachment) {
+  const userId = await attachmentsStorage.getAttachmentUser(todoId);
+  await todoRepository.updateAttachment(todoId, userId, request);
 }

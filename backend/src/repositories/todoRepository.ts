@@ -2,6 +2,7 @@ import * as AWS from 'aws-sdk';
 import * as xRay from 'aws-xray-sdk';
 import { TodoItem } from '../models/TodoItem';
 import { TodoUpdate } from '../models/TodoUpdate';
+import { TodoUpdateAttachment } from '../models/TodoUpdateAttachment';
 
 const xAWS = xRay.captureAWS(AWS);
 
@@ -54,6 +55,17 @@ export class TodoRepository {
       },
       ExpressionAttributeNames: {
         '#name': 'name',
+      },
+      Key: { todoId, userId },
+    }).promise();
+  }
+
+  async updateAttachment(todoId: string, userId: string, item: TodoUpdateAttachment) {
+    await this.documentClient.update({
+      TableName: this.todosTable,
+      UpdateExpression: 'SET attachmentUrl = :attachmentUrl',
+      ExpressionAttributeValues: {
+        ':attachmentUrl': item.attachmentUrl
       },
       Key: { todoId, userId },
     }).promise();

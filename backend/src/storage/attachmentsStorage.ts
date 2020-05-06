@@ -14,10 +14,20 @@ export function getAttachmentUrl(todoId: string): string {
   return `https://${attachmentsBucketName}.s3.amazonaws.com/${todoId}`;
 }
 
-export function getUploadUrl(todoId: string) {
+export function getUploadUrl(todoId: string, userId: string) {
   return s3.getSignedUrl('putObject', {
     Bucket: attachmentsBucketName,
     Key: todoId,
+    Metadata: { user: userId },
     Expires: signedUrlExpiration
   });
+}
+
+export async function getAttachmentUser(todoId: string) {
+  const object = await s3.headObject({
+    Bucket: attachmentsBucketName,
+    Key: todoId
+  }).promise();
+
+  return object.Metadata?.user;
 }

@@ -43,6 +43,23 @@ functions:
     environment:
       AUTH0_JWKS_URL: https://dev-lhbo4v8l.eu.auth0.com/.well-known/jwks.json
 
+  UpdateTodoAttachment:
+    handler: src/lambda/s3/attachment.handler
+    events:
+      - s3:
+          bucket: ${self:provider.environment.ATTACHMENTS_S3_BUCKET}
+          event: s3:ObjectCreated:*
+          existing: true
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:UpdateItem
+        Resource: ${self:custom.todosTableArn}
+      - Effect: Allow
+        Action:
+          - s3:GetObject
+        Resource: arn:aws:s3:::${self:provider.environment.ATTACHMENTS_S3_BUCKET}/*
+
   GetTodos:
     handler: src/lambda/http/getTodos.handler
     events:
