@@ -4,7 +4,7 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
 import * as todoService from '../../services/todoService';
 import { getUserId } from "../utils";
 import * as middy from 'middy';
-import { cors } from "middy/middlewares";
+import { cors } from 'middy/middlewares';
 
 export const handler = middy(async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   const userId = getUserId(event);
